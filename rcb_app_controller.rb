@@ -1,17 +1,21 @@
 require 'osx/cocoa'
 include OSX
+
+require_framework 'WebKit'
+
 require "rcb_tree_constructor"
 require "rcb_browser_cell"
-require "rcb_fastri"
+require "rcb_doc_finder"
+
 
 class RCBAppController < NSObject
-	ib_outlets :browser, :table_view, :text_view, :search_field
+	ib_outlets :browser, :table_view, :doc_view, :search_field
 
   def initialize
     @selected_cell = nil
     @methods = []
     super.init
-    @ri = RCBFastRi.new
+    @docs = RCBDocFinder.new
   end
 
 	def awakeFromNib
@@ -22,8 +26,8 @@ class RCBAppController < NSObject
 	  @table_view.setDataSource(self)
 	  @table_view.setDelegate(self)
 
-    @text_view.setFont(NSFont.fontWithName_size('Monaco', 10.0))
-	  @text_view.setString('')
+    # @text_view.setFont(NSFont.fontWithName_size('Monaco', 10.0))
+    # @text_view.setString('')
 	  
 	  @tree_constructor = RCBTreeConstructor.new
     @classes = @tree_constructor.create
@@ -111,8 +115,9 @@ class RCBAppController < NSObject
   def tableView_shouldSelectRow(table_view, row)
     Thread.new do
       full_name = "#{@selected_class}##{@methods[row]}"
-      result = @ri.info(full_name)
-      @text_view.setString(result ? result.to_s : "Nothing known about #{full_name}")
+      result = @docs.find(full_name)
+      html = result ? result.to_s : "Couldn't find #{full_name}"
+      @doc_view.mainFrame.loadHTMLString_baseURL(html, nil)   
     end
     true
   end

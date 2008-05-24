@@ -20,11 +20,11 @@
 			<dict>
 				<key>browser</key>
 				<string>id</string>
+				<key>doc_view</key>
+				<string>id</string>
 				<key>search_field</key>
 				<string>id</string>
 				<key>table_view</key>
-				<string>id</string>
-				<key>text_view</key>
 				<string>id</string>
 			</dict>
 		</dict>

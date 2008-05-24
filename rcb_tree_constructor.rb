@@ -3,7 +3,7 @@ class RCBTreeConstructor
   
   def initialize
     @classes = {}
-    require_stdlib
+    # require_stdlib
   end
   
   def create
@@ -26,7 +26,7 @@ class RCBTreeConstructor
 
   def require_stdlib
     Dir["/System/Library/Frameworks/Ruby.framework/Versions/1.8/usr/lib/ruby/1.8/*.rb"].each do |f|
-      next if f =~ /debug|profile|cgi-lib|mathn|tk|tempfile/
+      next if f =~ /debug|profile|cgi|mathn|tk|tempfile/
       # log("*** -> " + f)
       require(f)
     end
