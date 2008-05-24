@@ -28,7 +28,9 @@ end
 
 if __FILE__ == $0
   require 'osx/cocoa'
+  require "erb"
   include OSX
   docs = RCBDocFinder.new
-  puts docs.find("Array.new")
+  body = docs.find("Array.new")
+  puts ERB.new(File.read("rcb_doc_template.erb")).result(binding)
 end

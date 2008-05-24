@@ -124,6 +124,10 @@ class RCBAppController < NSObject
     true
   end
   
+  def tableViewSelectionDidChange(notification)
+    log(notification.object)
+  end
+
 	private
 
 	def parent_node_for_column(column)
