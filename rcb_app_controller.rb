@@ -55,22 +55,24 @@ class RCBAppController < NSObject
   	 node = @classes.values.find do |node|
   	   node.name.split("::").any? { |e| e.downcase == sender.stringValue.downcase }
   	 end
-  	 return unless node
-	 
-  	 path = [node]
-  	 until (parent = node.superclass) == nil
-  	   node = @classes[parent.name]
-  	   path.unshift(node)
-     end
-   
-     path.each_with_index do |e, idx|
-       if idx == 0
-         @browser.selectRow_inColumn(0, 0)
-  	   else
-  	     @browser.selectRow_inColumn(@classes[e.superclass.name].subclasses.index(e), idx)
+	  
+	   if node
+    	 path = [node]
+    	 until (parent = node.superclass) == nil
+    	   node = @classes[parent.name]
+    	   path.unshift(node)
        end
+   
+       path.each_with_index do |e, idx|
+         if idx == 0
+           @browser.selectRow_inColumn(0, 0)
+    	   else
+    	     @browser.selectRow_inColumn(@classes[e.superclass.name].subclasses.index(e), idx)
+         end
+    	 end
   	 end
-   end
+  	 
+   end 
 	end
 
 	# ==============================
