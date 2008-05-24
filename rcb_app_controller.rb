@@ -1,11 +1,8 @@
 require 'osx/cocoa'
 include OSX
-require "tree_constructor"
-
-class RCBBrowserCell < NSBrowserCell
-  attr_accessor :node
-end
-
+require "rcb_tree_constructor"
+require "rcb_browser_cell"
+require "rcb_fastri"
 
 class RCBAppController < NSObject
 	ib_outlets :browser, :table_view, :text_view, :search_field
@@ -26,10 +23,12 @@ class RCBAppController < NSObject
 	  @table_view.setDelegate(self)
 
     @text_view.setFont(NSFont.fontWithName_size('Monaco', 10.0))
+	  @text_view.setString('')
 	  
 	  @tree_constructor = RCBTreeConstructor.new
     @classes = @tree_constructor.create
 
+    # FIXME: find the right way to do this
     Thread.new do
       loop { update_method_table; sleep 0.4 }
     end
@@ -41,7 +40,8 @@ class RCBAppController < NSObject
       begin
         panel.filenames.each { |f| require(f) }
       rescue Exception => e
-        NSAlert.alertWithMessageText_defaultButton_alternateButton_otherButton_informativeTextWithFormat(e.message, nil, nil, nil, nil)
+        log(e.message)
+        NSRunAlertPanel(e.class.name, e.message, "OK", "", "")
       end
     end
     @classes = @tree_constructor.create
