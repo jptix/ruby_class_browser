@@ -6,16 +6,18 @@ require_framework 'WebKit'
 require "rcb_tree_constructor"
 require "rcb_browser_cell"
 require "rcb_doc_finder"
-
+require "erb"
 
 class RCBAppController < NSObject
 	ib_outlets :browser, :table_view, :doc_view, :search_field
 
   def initialize
+    Thread.abort_on_exception = true
     @selected_cell = nil
     @methods = []
     super.init
     @docs = RCBDocFinder.new
+    @doc_template = File.read(File.dirname(__FILE__) + "/rcb_doc_template.erb")
   end
 
 	def awakeFromNib
@@ -26,9 +28,6 @@ class RCBAppController < NSObject
 	  @table_view.setDataSource(self)
 	  @table_view.setDelegate(self)
 
-    # @text_view.setFont(NSFont.fontWithName_size('Monaco', 10.0))
-    # @text_view.setString('')
-	  
 	  @tree_constructor = RCBTreeConstructor.new
     @classes = @tree_constructor.create
 
@@ -116,7 +115,8 @@ class RCBAppController < NSObject
     Thread.new do
       full_name = "#{@selected_class}##{@methods[row]}"
       result = @docs.find(full_name)
-      html = result ? result.to_s : "Couldn't find #{full_name}"
+      body = result ? result.to_s : "Couldn't find #{full_name}"
+      html = ERB.new(@doc_template).result(binding)
       @doc_view.mainFrame.loadHTMLString_baseURL(html, nil)   
     end
     true

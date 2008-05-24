@@ -16,7 +16,7 @@ class RCBDocFinder
       @ri.get_info_for(meth)
     rescue RiError => e
       log(e.message)
-      e.message
+      output << e.message
     ensure
       $stdout = old_stdout
     end
@@ -30,5 +30,5 @@ if __FILE__ == $0
   require 'osx/cocoa'
   include OSX
   docs = RCBDocFinder.new
-  p docs.find("Array.new")
+  puts docs.find("Array.new")
 end
