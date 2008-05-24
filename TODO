@@ -1,0 +1,3 @@
+- fix method lookup (object, class methods, module functions, mixins?)
+- drag rb file to browser to add class
+- resizing of views
