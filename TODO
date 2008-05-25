@@ -1,2 +1,4 @@
-- drag rb file to browser to add class
-- fix method lookup (class methods?)
+- support class methods
+- support searching for methods
+- figure out a good way to load stdlib
+- drag rb file to browser to add class?

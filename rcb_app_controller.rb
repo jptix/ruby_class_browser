@@ -64,7 +64,6 @@ class RCBAppController < NSObject
          end
     	 end
     	 update_method_table
-    	 select_first_method
   	 end
 	end
 
