@@ -134,7 +134,7 @@ class RCBAppController < NSObject
   def tableViewSelectionDidChange(notification)
     row = notification.object.selectedRow
     separator = @method_side == :instance ? '#' : '::'
-    show_documentation(@selected_class + separator + @methods[row])
+    show_documentation(@selected_class + separator + @methods[row].to_s)
   end
 
 	private
@@ -178,7 +178,7 @@ class RCBAppController < NSObject
   def select_first_method
     @table_view.selectRowIndexes_byExtendingSelection(NSIndexSet.indexSetWithIndex(0), false)
     separator = @method_side == :instance ? '#' : '::'
-    show_documentation(@selected_class + separator + @methods[0])
+    show_documentation(@selected_class + separator + @methods[0].to_s)
   end
 end
 

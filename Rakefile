@@ -7,7 +7,7 @@ require 'erb'
 require 'pathname'
 
 # Application own Settings
-APPNAME   = "RubyClassBrowser"
+APPNAME   = "Ruby Class Browser"
 TARGET    = "#{APPNAME}.app"
 VERSION   = "rev#{`svn info`[/Revision: (\d+)/, 1]}"
 RESOURCES = ["*.rb", "*.lproj", "Credits.*", "*.icns", "*.erb"]
@@ -15,7 +15,7 @@ PKGINC    = [TARGET, 'README', 'html', 'client']
 LOCALENIB = [] #['Japanese.lproj/Main.nib']
 PUBLISH   = 'yourname@yourhost:path'
 
-BUNDLEID  = "rubyapp.#{APPNAME}"
+BUNDLEID  = "net.hardstylesensation.#{APPNAME}"
 
 CLEAN.include ['**/.*.sw?', '*.dmg', TARGET, 'image', 'a.out']
 
