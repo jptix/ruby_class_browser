@@ -10,8 +10,7 @@ class RCBTreeConstructor
   
   def create
     ObjectSpace.each_object do |obj|
-      next unless [Class, Module].include?(obj.class)   
-      next if obj.name =~ /^(#<Class|RCB)/
+      next if ![Class, Module].include?(obj.class) || obj.name =~ /^(#<Class|RCB)/
       @classes[obj.name] ||= RCBClassNode.new(obj) 
     end
     
@@ -43,8 +42,5 @@ if __FILE__ == $0
   require "pp"
   t = RCBTreeConstructor.new
   classes = t.create
-  require "rubygems"
-  require 'ruby-debug'
-  debugger
   pp classes
 end

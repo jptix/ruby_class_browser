@@ -15,7 +15,6 @@ class RCBAppController < NSObject
     Thread.abort_on_exception = true
     @selected_cell = nil
     @methods = []
-    super.init
     @docs = RCBDocFinder.new
     @doc_template = File.read(File.dirname(__FILE__) + "/rcb_doc_template.erb")
   end
@@ -24,17 +23,14 @@ class RCBAppController < NSObject
 	  @browser.setCellClass(RCBBrowserCell)
 	  @browser.setDelegate(self)
 	  @browser.setMaxVisibleColumns(4)
+    @browser.setTakesTitleFromPreviousColumn(false)
+
 	  
 	  @table_view.setDataSource(self)
 	  @table_view.setDelegate(self)
 
 	  @tree_constructor = RCBTreeConstructor.new
     @classes = @tree_constructor.create
-
-    # FIXME: find the right way to do this
-    Thread.new do
-      loop { update_method_table; sleep 0.4 }
-    end
 	end
 	
   def open(sender)
@@ -51,28 +47,25 @@ class RCBAppController < NSObject
   end
 
 	def search(sender)
-	 Thread.new do
   	 node = @classes.values.find do |node|
   	   node.name.split("::").any? { |e| e.downcase == sender.stringValue.downcase }
   	 end
+  	 
+	   node ||= @classes.values.find do |node|
+   	   node.name.split("::").any? { |e| Regexp.new(Regexp.escape(sender.stringValue), Regexp::IGNORECASE) =~ e }
+   	 end
 	  
 	   if node
-    	 path = [node]
-    	 until (parent = node.superclass) == nil
-    	   node = @classes[parent.name]
-    	   path.unshift(node)
-       end
-   
-       path.each_with_index do |e, idx|
+       path_for_node(node).each_with_index do |e, idx|
          if idx == 0
            @browser.selectRow_inColumn(0, 0)
     	   else
     	     @browser.selectRow_inColumn(@classes[e.superclass.name].subclasses.index(e), idx)
          end
     	 end
+    	 update_method_table
+    	 select_first_method
   	 end
-  	 
-   end 
 	end
 
 	# ==============================
@@ -99,6 +92,10 @@ class RCBAppController < NSObject
     end
 	end
 	
+	def browser_selection_changed(sender)
+	  update_method_table
+	end
+	
 	# ===================================
 	# = NSTableView data source methods =
 	# ===================================
@@ -113,19 +110,11 @@ class RCBAppController < NSObject
   # ================================
   # = NSTableView delegate methods =
   # ================================
-  def tableView_shouldSelectRow(table_view, row)
-    Thread.new do
-      full_name = "#{@selected_class}##{@methods[row]}"
-      result = @docs.find(full_name)
-      body = result ? result.to_s : "Couldn't find #{full_name}"
-      html = ERB.new(@doc_template).result(binding)
-      @doc_view.mainFrame.loadHTMLString_baseURL(html, nil)   
-    end
-    true
-  end
-  
   def tableViewSelectionDidChange(notification)
-    log(notification.object)
+    Thread.new do
+      row = notification.object.selectedRow
+      show_documentation_for_method(@methods[row])
+    end
   end
 
 	private
@@ -136,12 +125,35 @@ class RCBAppController < NSObject
 	  end
 	end
 
+  def path_for_node(node)
+    path = [node]
+    until (parent = node.superclass).nil?
+      node = @classes[parent.name]
+      path.unshift(node)
+    end
+    path
+  end
+  
+  def show_documentation_for_method(method)
+    full_name = "#{@selected_class}##{method}"
+    result = @docs.find(full_name)
+    body = result ? result.to_s : "Couldn't find #{full_name}"
+    html = ERB.new(@doc_template).result(binding)
+    @doc_view.mainFrame.loadHTMLString_baseURL(html, nil)   
+  end
+
   def update_method_table
     if cell = @browser.selectedCell
       @selected_class = cell.node.name
       @methods = cell.node.instance_methods
       @table_view.reloadData
+      select_first_method
     end
+  end
+  
+  def select_first_method
+    @table_view.selectRowIndexes_byExtendingSelection(NSIndexSet.indexSetWithIndex(0), false)
+    show_documentation_for_method(@methods[0])
   end
 end
 
