@@ -48,24 +48,31 @@ class RCBAppController < NSObject
   end
 
 	def search(sender)
-  	 node = @classes.values.find do |node|
-  	   node.name.split("::").any? { |e| e.downcase == sender.stringValue.downcase }
-  	 end
-  	 
-	   node ||= @classes.values.find do |node|
-   	   node.name.split("::").any? { |e| Regexp.new(Regexp.escape(sender.stringValue), Regexp::IGNORECASE) =~ e }
-   	 end
-	  
-	   if node
-       path_for_node(node).each_with_index do |e, idx|
-         if idx == 0
-           @browser.selectRow_inColumn(0, 0)
-    	   else
-    	     @browser.selectRow_inColumn(@classes[e.superclass.name].subclasses.index(e), idx)
-         end
-    	 end
-       browser_selection_changed
-  	 end
+	  query = sender.stringValue
+	  if query.empty?
+      @browser.selectRow_inColumn(0, 0) 
+      return browser_selection_changed
+    end
+    
+    
+    node = @classes.values.find do |node|
+     node.name.split("::").any? { |e| e.downcase == query.downcase }
+    end
+
+    node ||= @classes.values.find do |node|
+       node.name.split("::").any? { |e| Regexp.new(Regexp.escape(query), Regexp::IGNORECASE) =~ e }
+     end
+
+    if node
+     path_for_node(node).each_with_index do |e, idx|
+       if idx == 0
+         @browser.selectRow_inColumn(0, 0)
+       else
+         @browser.selectRow_inColumn(@classes[e.superclass.name].subclasses.index(e), idx)
+       end
+     end
+     browser_selection_changed
+    end
 	end
 	
 	def focus_search_field

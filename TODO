@@ -2,4 +2,4 @@
 - figure out a good way to load stdlib?
 - drag rb file to browser to add class
 - resizable font
-- remember state (chosen array/method, window position)
+- remember state (chosen class/method, window position)

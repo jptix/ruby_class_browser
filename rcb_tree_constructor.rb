@@ -10,7 +10,7 @@ class RCBTreeConstructor
   
   def create
     ObjectSpace.each_object(Module) do |obj|
-      next if obj.name =~ /^(#<Class|RCB)|^$/
+      next if obj.name =~ /^(#<Class|RCB|RiOutputter)|^$/
       @classes[obj.name] ||= RCBClassNode.new(obj) 
     end
     
