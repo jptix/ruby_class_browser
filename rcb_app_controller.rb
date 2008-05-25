@@ -9,7 +9,8 @@ require "rcb_doc_finder"
 require "erb"
 
 class RCBAppController < NSObject
-	ib_outlets :browser, :table_view, :doc_view, :search_field
+	ib_outlets :browser, :table_view, :doc_view, :search_field,
+	           :window
 
   def initialize
     Thread.abort_on_exception = true
@@ -64,6 +65,10 @@ class RCBAppController < NSObject
        browser_selection_changed
   	 end
 	end
+	
+	def focus_search_field
+	 @window.makeFirstResponder(@search_field)
+	end
 
 	# ==============================
 	# = NSBrowser delegate methods =
@@ -73,6 +78,7 @@ class RCBAppController < NSObject
       current_node = @classes['Object']
     else
       parent_node = parent_node_for_column(column)
+      log(parent_node) if row == 0
       current_node = parent_node.subclasses[row]
     end
     
@@ -89,6 +95,7 @@ class RCBAppController < NSObject
     end
 	end
 	
+	# action method
 	def browser_selection_changed(sender = nil)
 	  update_method_table
 	  show_documentation(@selected_class)
