@@ -15,6 +15,12 @@
 				<string>id</string>
 				<key>search</key>
 				<string>id</string>
+				<key>select_class_side</key>
+				<string>id</string>
+				<key>select_instance_side</key>
+				<string>id</string>
+				<key>toggle_button_changed</key>
+				<string>id</string>
 			</dict>
 			<key>CLASS</key>
 			<string>RCBAppController</string>
@@ -29,6 +35,8 @@
 				<key>search_field</key>
 				<string>id</string>
 				<key>table_view</key>
+				<string>id</string>
+				<key>toggle_button</key>
 				<string>id</string>
 				<key>window</key>
 				<string>id</string>

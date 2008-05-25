@@ -10,12 +10,13 @@ require "erb"
 
 class RCBAppController < NSObject
 	ib_outlets :browser, :table_view, :doc_view, :search_field,
-	           :window
+	           :window, :toggle_button
 
   def initialize
     Thread.abort_on_exception = true
     @selected_cell = nil
     @methods = []
+    @method_side = :instance
     @docs = RCBDocFinder.new
     @doc_template = File.read(File.dirname(__FILE__) + "/rcb_doc_template.erb")
   end
@@ -67,8 +68,29 @@ class RCBAppController < NSObject
 	end
 	
 	def focus_search_field
-	 @window.makeFirstResponder(@search_field)
+	  @window.makeFirstResponder(@search_field)
 	end
+
+  def select_instance_side
+    @toggle_button.selectedSegment = 0
+    toggle_button_changed
+  end
+
+  def select_class_side
+    @toggle_button.selectedSegment = 1
+    toggle_button_changed
+  end
+
+
+	def browser_selection_changed(sender = nil)
+	  update_method_table
+	  show_documentation(@selected_class)
+	end
+	
+	def toggle_button_changed
+	  update_method_table
+	end
+
 
 	# ==============================
 	# = NSBrowser delegate methods =
@@ -95,12 +117,6 @@ class RCBAppController < NSObject
     end
 	end
 	
-	# action method
-	def browser_selection_changed(sender = nil)
-	  update_method_table
-	  show_documentation(@selected_class)
-	end
-	
 	# ===================================
 	# = NSTableView data source methods =
 	# ===================================
@@ -116,10 +132,9 @@ class RCBAppController < NSObject
   # = NSTableView delegate methods =
   # ================================
   def tableViewSelectionDidChange(notification)
-    Thread.new do
-      row = notification.object.selectedRow
-      show_documentation("#{@selected_class}##{@methods[row]}")
-    end
+    row = notification.object.selectedRow
+    separator = @method_side == :instance ? '#' : '::'
+    show_documentation(@selected_class + separator + @methods[row])
   end
 
 	private
@@ -149,14 +164,21 @@ class RCBAppController < NSObject
   def update_method_table
     if cell = @browser.selectedCell
       @selected_class = cell.node.name
-      @methods = cell.node.instance_methods
+      if @toggle_button.selectedSegment == 0
+        @method_side = :instance
+        @methods = cell.node.instance_methods
+      else
+        @method_side = :class
+        @methods = cell.node.class_methods
+      end
       @table_view.reloadData
     end
   end
   
   def select_first_method
     @table_view.selectRowIndexes_byExtendingSelection(NSIndexSet.indexSetWithIndex(0), false)
-    show_documentation_for_method("#{@selected_class}##{@methods.first}")
+    separator = @method_side == :instance ? '#' : '::'
+    show_documentation(@selected_class + separator + @methods[0])
   end
 end
 

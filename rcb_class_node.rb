@@ -13,10 +13,11 @@ class RCBClassNode
   end
   
   def instance_methods
-    (@class == Object ? @class.methods : @class.instance_methods(false)).sort
+    @class.instance_methods(false).sort
+    #(@class == Object ? @class.methods : @class.instance_methods(false)).sort
   end
   
   def class_methods
-    (@class.methods - @class.ancestors.map { |e| e.methods }).sort
+    @class.methods(false).sort
   end
 end
