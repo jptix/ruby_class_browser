@@ -61,7 +61,7 @@ class RCBAppController < NSObject
     	     @browser.selectRow_inColumn(@classes[e.superclass.name].subclasses.index(e), idx)
          end
     	 end
-    	 update_method_table
+       browser_selection_changed
   	 end
 	end
 
@@ -89,8 +89,9 @@ class RCBAppController < NSObject
     end
 	end
 	
-	def browser_selection_changed(sender)
+	def browser_selection_changed(sender = nil)
 	  update_method_table
+	  show_documentation(@selected_class)
 	end
 	
 	# ===================================
@@ -110,7 +111,7 @@ class RCBAppController < NSObject
   def tableViewSelectionDidChange(notification)
     Thread.new do
       row = notification.object.selectedRow
-      show_documentation_for_method(@methods[row])
+      show_documentation("#{@selected_class}##{@methods[row]}")
     end
   end
 
@@ -131,10 +132,9 @@ class RCBAppController < NSObject
     path
   end
   
-  def show_documentation_for_method(method)
-    full_name = "#{@selected_class}##{method}"
-    result = @docs.find(full_name)
-    body = result ? result.to_s : "Couldn't find #{full_name}"
+  def show_documentation(query)
+    result = @docs.find(query)
+    body = result ? result.to_s : "Couldn't find documentation for #{query.inspect}"
     html = ERB.new(@doc_template).result(binding)
     @doc_view.mainFrame.loadHTMLString_baseURL(html, nil)   
   end
@@ -144,13 +144,12 @@ class RCBAppController < NSObject
       @selected_class = cell.node.name
       @methods = cell.node.instance_methods
       @table_view.reloadData
-      select_first_method
     end
   end
   
   def select_first_method
     @table_view.selectRowIndexes_byExtendingSelection(NSIndexSet.indexSetWithIndex(0), false)
-    show_documentation_for_method(@methods[0])
+    show_documentation_for_method("#{@selected_class}##{@methods.first}")
   end
 end
 
