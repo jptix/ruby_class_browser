@@ -22,15 +22,14 @@ class RCBAppController < NSObject
   end
 
 	def awakeFromNib
+	  @table_view.dataSource = @table_view.delegate = @browser.delegate = self
 	  @browser.cellClass = RCBBrowserCell
-	  @browser.delegate = self
 	  @browser.maxVisibleColumns = 4
     @browser.takesTitleFromPreviousColumn = false
 
-	  @table_view.dataSource = @table_view.delegate = self
-
 	  @tree_constructor = RCBTreeConstructor.new
     @classes = @tree_constructor.create
+    focus_search_field
 	end
 	
   def open(sender)
@@ -90,7 +89,6 @@ class RCBAppController < NSObject
 	def toggle_button_changed
 	  update_method_table
 	end
-
 
 	# ==============================
 	# = NSBrowser delegate methods =
