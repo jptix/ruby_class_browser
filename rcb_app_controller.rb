@@ -5,7 +5,8 @@ require_framework 'WebKit'
 
 require "rcb_tree_constructor"
 require "rcb_browser_cell"
-require "rcb_doc_finder"
+require "ri_outputter/lib/ri_outputter"
+# require "rcb_doc_finder"
 require "erb"
 
 class RCBAppController < NSObject
@@ -17,8 +18,8 @@ class RCBAppController < NSObject
     @selected_cell = nil
     @methods = []
     @method_side = :instance
-    @docs = RCBDocFinder.new
-    @doc_template = File.read(File.dirname(__FILE__) + "/rcb_doc_template.erb")
+    @ri = RiOutputter::Lookup.new
+    # @doc_template = File.read(File.dirname(__FILE__) + "/rcb_doc_template.erb")
   end
 
 	def awakeFromNib
@@ -152,9 +153,11 @@ class RCBAppController < NSObject
   end
   
   def show_documentation(query)
-    result = @docs.find(query)
-    body = result ? result.to_s : "Couldn't find documentation for #{query.inspect}"
-    html = ERB.new(@doc_template).result(binding)
+    begin
+      html = @ri.find(query).to_s
+    rescue RiError
+      html = "Nothing found for #{query.inspect}"
+    end
     @doc_view.mainFrame.loadHTMLString_baseURL(html, nil)   
   end
 

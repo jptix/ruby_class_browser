@@ -10,7 +10,7 @@ require 'pathname'
 APPNAME   = "Ruby Class Browser"
 TARGET    = "#{APPNAME}.app"
 VERSION   = "rev#{`svn info`[/Revision: (\d+)/, 1]}"
-RESOURCES = ["*.rb", "*.lproj", "Credits.*", "*.icns", "*.erb"]
+RESOURCES = ["*.rb", "*.lproj", "Credits.*", "*.icns", "*.erb", "ri_outputter"]
 PKGINC    = [TARGET, 'README', 'html', 'client']
 LOCALENIB = [] #['Japanese.lproj/Main.nib']
 PUBLISH   = 'yourname@yourhost:path'

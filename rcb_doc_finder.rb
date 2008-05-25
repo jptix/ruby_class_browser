@@ -1,6 +1,10 @@
 require "rdoc/ri/ri_driver"
 require "stringio"
 
+# =======================================================
+# = Not in use - use the ri_outputter submodule instead =
+# =======================================================
+
 class RCBDocFinder
   def initialize
     @ri_options = RI::Options.instance
