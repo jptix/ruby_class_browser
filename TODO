@@ -1,3 +1,5 @@
 - support searching for methods
 - figure out a good way to load stdlib?
 - drag rb file to browser to add class
+- resizable font
+- remember state (chosen array/method, window position)

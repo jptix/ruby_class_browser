@@ -98,7 +98,6 @@ class RCBAppController < NSObject
       current_node = @classes['Object']
     else
       parent_node = parent_node_for_column(column)
-      log(parent_node) if row == 0
       current_node = parent_node.subclasses[row]
     end
     

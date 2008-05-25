@@ -31,6 +31,6 @@ if __FILE__ == $0
   require "erb"
   include OSX
   docs = RCBDocFinder.new
-  body = docs.find("Array.new")
+  body = docs.find("Array")
   puts ERB.new(File.read("rcb_doc_template.erb")).result(binding)
 end

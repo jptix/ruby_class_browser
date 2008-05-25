@@ -46,5 +46,7 @@ if __FILE__ == $0
   require "pp"
   t = RCBTreeConstructor.new
   classes = t.create
+  # require 'rubygems'; require 'ruby-debug'
+  # debugger
   pp classes
 end

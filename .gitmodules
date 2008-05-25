@@ -1,0 +1,3 @@
+[submodule "ri_outputter"]
+	path = ri_outputter
+	url = git://github.com/jptix/ri_outputter.git
