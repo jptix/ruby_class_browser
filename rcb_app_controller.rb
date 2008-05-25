@@ -18,8 +18,9 @@ class RCBAppController < NSObject
     @selected_cell = nil
     @methods = []
     @method_side = :instance
-    @ri = RiOutputter::Lookup.new
-    # @doc_template = File.read(File.dirname(__FILE__) + "/rcb_doc_template.erb")
+    @ri = RiOutputter::Lookup.new(
+      :template_folder => File.dirname(__FILE__) + "/ri_outputter/lib/ri_outputter/templates/ruby_class_browser"
+    )
   end
 
 	def awakeFromNib
@@ -154,7 +155,7 @@ class RCBAppController < NSObject
   
   def show_documentation(query)
     begin
-      html = @ri.find(query).to_s
+      html = @ri.html_for(query).to_s
     rescue RiError
       html = "Nothing found for #{query.inspect}"
     end
