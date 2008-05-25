@@ -30,9 +30,13 @@ class RCBTreeConstructor
   # buggy...
   def require_stdlib
     Dir["/System/Library/Frameworks/Ruby.framework/Versions/1.8/usr/lib/ruby/1.8/*.rb"].each do |f|
-      next if f =~ /debug|profile|cgi|mathn|tk|tempfile/
-      # log("*** -> " + f)
-      require(f)
+      next if f =~ /tk/
+      begin
+        require(f)
+      rescue Exception => e 
+        log(e.message)
+        next
+      end
     end
   end
   

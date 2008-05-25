@@ -20,14 +20,12 @@ class RCBAppController < NSObject
   end
 
 	def awakeFromNib
-	  @browser.setCellClass(RCBBrowserCell)
-	  @browser.setDelegate(self)
-	  @browser.setMaxVisibleColumns(4)
-    @browser.setTakesTitleFromPreviousColumn(false)
+	  @browser.cellClass = RCBBrowserCell
+	  @browser.delegate = self
+	  @browser.maxVisibleColumns = 4
+    @browser.takesTitleFromPreviousColumn = false
 
-	  
-	  @table_view.setDataSource(self)
-	  @table_view.setDelegate(self)
+	  @table_view.dataSource = @table_view.delegate = self
 
 	  @tree_constructor = RCBTreeConstructor.new
     @classes = @tree_constructor.create
@@ -78,8 +76,8 @@ class RCBAppController < NSObject
       current_node = parent_node.subclasses[row]
     end
     
-    cell.setLeaf(true) if current_node.subclasses.empty?
-	  cell.setStringValue(current_node.name)
+    cell.leaf = true if current_node.subclasses.empty?
+	  cell.stringValue = current_node.name
 	  cell.node = current_node
   end
   
