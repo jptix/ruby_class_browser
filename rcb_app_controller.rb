@@ -161,12 +161,12 @@ class RCBAppController < NSObject
   end
   
   def show_documentation(query)
-    begin
-      html = @ri.html_for(query).to_s
+    begin 
+      html = @ri.html_for(query)
     rescue RiError
-      html = "Nothing found for #{query.inspect}"
+      html = nil
     end
-    @doc_view.mainFrame.loadHTMLString_baseURL(html, nil)   
+    @doc_view.mainFrame.loadHTMLString_baseURL(html || "<h3>Nothing found for #{e_html query.inspect}</h3>", nil)   
   end
 
   def update_method_table
@@ -188,5 +188,7 @@ class RCBAppController < NSObject
     separator = @method_side == :instance ? '#' : '::'
     show_documentation(@selected_class + separator + @methods[0].to_s)
   end
+  
+  def e_html(text); text.gsub(/&/, '&amp;').gsub(/</, '&lt;').gsub(/>/, '&gt;') end
 end
 
