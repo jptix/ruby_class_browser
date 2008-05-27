@@ -3,11 +3,10 @@ include OSX
 
 require_framework 'WebKit'
 
-require "rcb_tree_constructor"
-require "rcb_browser_cell"
+# require "rcb_tree_constructor"
+# require "rcb_browser_cell"
 require "ri_outputter/lib/ri_outputter"
-# require "rcb_doc_finder"
-require "erb"
+# require "rcb_search_window_controller"
 
 class RCBAppController < NSObject
 	ib_outlets :browser, :table_view, :doc_view, :search_field,
@@ -97,6 +96,7 @@ class RCBAppController < NSObject
 	
 	def toggle_button_changed
 	  update_method_table
+	  tableViewSelectionDidChange(nil)
 	end
 
 	# ==============================
@@ -138,7 +138,7 @@ class RCBAppController < NSObject
   # = NSTableView delegate methods =
   # ================================
   def tableViewSelectionDidChange(notification)
-    row = notification.object.selectedRow
+    row = @table_view.selectedRow
     separator = @method_side == :instance ? '#' : '::'
     show_documentation(@selected_class + separator + @methods[row].to_s)
   end
