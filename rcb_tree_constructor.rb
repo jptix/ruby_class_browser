@@ -1,10 +1,11 @@
 require "rcb_class_node"
 
 class RCBTreeConstructor
-  attr_reader :classes
+  attr_reader :classes, :methods
   
   def initialize
     @classes = {}
+    @methods = Hash.new { |h, k| h[k] = [] }
     # require_stdlib
   end
   
@@ -12,9 +13,20 @@ class RCBTreeConstructor
     ObjectSpace.each_object(Module) do |obj|
       next if obj.name =~ /^(RCB|RiOutputter)|^$/
       name = obj.name.empty? ? obj.to_s : obj.name
-      @classes[obj.name] ||= RCBClassNode.new(obj) 
+      node = (@classes[obj.name] ||= RCBClassNode.new(obj))
+      
+      obj.instance_methods(false).each do |meth|
+        arr = @methods[meth] 
+        arr << node unless arr.include?(node)
+      end
+      
+      obj.methods(false).each do |meth|
+        arr = @methods[meth] 
+        arr << node unless arr.include?(node)
+      end
     end
     
+    log("ObjectSpace traversal finished.")
     @classes.delete(nil)
     @classes.values.each do |node|
       if parent_node = @classes[node.superclass.to_s]

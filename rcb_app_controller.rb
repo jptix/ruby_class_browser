@@ -18,6 +18,7 @@ class RCBAppController < NSObject
     @methods = []
     @method_side = :instance
     @ri = RiOutputter::Lookup.new(
+      :lookup_order    => [:exact],
       :template_folder => File.dirname(__FILE__) + "/ri_outputter/lib/ri_outputter/templates/ruby_class_browser"
     )
   end
@@ -29,7 +30,10 @@ class RCBAppController < NSObject
     @browser.takesTitleFromPreviousColumn = false
 
 	  @tree_constructor = RCBTreeConstructor.new
-    @classes = @tree_constructor.create
+    @tree_constructor.create
+    @classes      = @tree_constructor.classes
+    @method_table = @tree_constructor.methods
+
     focus_search_field
 	end
 	
@@ -53,24 +57,23 @@ class RCBAppController < NSObject
       return browser_selection_changed
     end
     
-    
-    node = @classes.values.find do |node|
-     node.name.split("::").any? { |e| e.downcase == query.downcase }
-    end
-
-    node ||= @classes.values.find do |node|
-       node.name.split("::").any? { |e| Regexp.new(Regexp.escape(query), Regexp::IGNORECASE) =~ e }
-     end
-
-    if node
-     path_for_node(node).each_with_index do |e, idx|
-       if idx == 0
-         @browser.selectRow_inColumn(0, 0)
-       else
-         @browser.selectRow_inColumn(@classes[e.superclass.name].subclasses.index(e), idx)
+    if query.to_ruby =~ /[A-Z]/
+      # class search
+      if node = class_search(query)
+       path_for_node(node).each_with_index do |e, idx|
+         if idx == 0
+           @browser.selectRow_inColumn(0, 0)
+         else
+           @browser.selectRow_inColumn(@classes[e.superclass.name].subclasses.index(e), idx)
+         end
        end
-     end
-     browser_selection_changed
+       browser_selection_changed
+      end
+    else
+      # method search
+      log("method search:")
+      node = method_search(query)
+      log("result #{node.inspect}")
     end
 	end
 	
@@ -190,5 +193,25 @@ class RCBAppController < NSObject
   end
   
   def e_html(text); text.gsub(/&/, '&amp;').gsub(/</, '&lt;').gsub(/>/, '&gt;') end
+  
+  def class_search(query)
+    node = @classes.values.find do |node|
+     node.name.split("::").any? { |e| e.downcase == query.downcase }
+    end
+
+    node ||= @classes.values.find do |node|
+       node.name.split("::").any? { |e| Regexp.new(Regexp.escape(query), Regexp::IGNORECASE) =~ e }
+    end
+  end
+  
+  def method_search(query)
+    node = @method_table[query.to_s].first
+    unless node
+      match = @method_table.find { |method, objects| Regexp.new(Regexp.escape(query), Regexp::IGNORECASE) =~ method }
+      node  = match[1].first if node  
+    end
+    node
+  end
+  
 end
 
