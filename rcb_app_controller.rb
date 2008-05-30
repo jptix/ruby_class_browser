@@ -2,15 +2,11 @@ require 'osx/cocoa'
 include OSX
 
 require_framework 'WebKit'
-
-# require "rcb_tree_constructor"
-# require "rcb_browser_cell"
 require "ri_outputter/lib/ri_outputter"
-# require "rcb_search_window_controller"
 
 class RCBAppController < NSObject
 	ib_outlets :browser, :table_view, :doc_view, :search_field,
-	           :window, :toggle_button
+	           :window, :toggle_button, :search_result_table
 
   def initialize
     Thread.abort_on_exception = true
@@ -18,13 +14,13 @@ class RCBAppController < NSObject
     @methods = []
     @method_side = :instance
     @ri = RiOutputter::Lookup.new(
-      :lookup_order    => [:exact],
+      :lookup_order    => [:exact, :exact_ci, :nested],
       :template_folder => File.dirname(__FILE__) + "/ri_outputter/lib/ri_outputter/templates/ruby_class_browser"
     )
   end
 
 	def awakeFromNib
-	  @table_view.dataSource = @table_view.delegate = @browser.delegate = self
+    @table_view.dataSource = @table_view.delegate = @browser.delegate = self
 	  @browser.cellClass = RCBBrowserCell
 	  @browser.maxVisibleColumns = 4
     @browser.takesTitleFromPreviousColumn = false
@@ -34,7 +30,14 @@ class RCBAppController < NSObject
     @classes      = @tree_constructor.classes
     @method_table = @tree_constructor.methods
 
-    focus_search_field
+    # @searcher = RCBSearcher.new(@classes, @method_table, @search_result_table)
+    # @search_result_table.delegate = @search_result_table.dataSource = @searcher
+    # @rcb_searcher.class_table = @classes
+    # @rcb_searcher.method_table = @method_table
+    
+    
+    @browser.selectRow_inColumn(0, 0) 
+    browser_selection_changed
 	end
 	
   def open(sender)
@@ -58,29 +61,14 @@ class RCBAppController < NSObject
     end
     
     if query.to_ruby =~ /[A-Z]/
-      # class search
-      if node = class_search(query)
-       path_for_node(node).each_with_index do |e, idx|
-         if idx == 0
-           @browser.selectRow_inColumn(0, 0)
-         else
-           @browser.selectRow_inColumn(@classes[e.superclass.name].subclasses.index(e), idx)
-         end
-       end
-       browser_selection_changed
+      if nodes = @searcher.find_classes(query)
+        select_node(nodes.first)
       end
     else
-      # method search
-      log("method search:")
-      node = method_search(query)
-      log("result #{node.inspect}")
+      @searcher.find_methods(query)
     end
 	end
 	
-	def focus_search_field
-	  @window.makeFirstResponder(@search_field)
-	end
-
   def select_instance_side
     @toggle_button.selectedSegment = 0
     toggle_button_changed
@@ -90,8 +78,7 @@ class RCBAppController < NSObject
     @toggle_button.selectedSegment = 1
     toggle_button_changed
   end
-
-
+  
 	def browser_selection_changed(sender = nil)
 	  update_method_table
 	  show_documentation(@selected_class)
@@ -185,6 +172,17 @@ class RCBAppController < NSObject
       @table_view.reloadData
     end
   end
+
+  def select_node(node)
+     path_for_node(node).each_with_index do |e, idx|
+       if idx == 0
+         @browser.selectRow_inColumn(0, 0)
+       else
+         @browser.selectRow_inColumn(@classes[e.superclass.name].subclasses.index(e), idx)
+       end
+     end
+     browser_selection_changed
+  end
   
   def select_first_method
     @table_view.selectRowIndexes_byExtendingSelection(NSIndexSet.indexSetWithIndex(0), false)
@@ -193,25 +191,5 @@ class RCBAppController < NSObject
   end
   
   def e_html(text); text.gsub(/&/, '&amp;').gsub(/</, '&lt;').gsub(/>/, '&gt;') end
-  
-  def class_search(query)
-    node = @classes.values.find do |node|
-     node.name.split("::").any? { |e| e.downcase == query.downcase }
-    end
-
-    node ||= @classes.values.find do |node|
-       node.name.split("::").any? { |e| Regexp.new(Regexp.escape(query), Regexp::IGNORECASE) =~ e }
-    end
-  end
-  
-  def method_search(query)
-    node = @method_table[query.to_s].first
-    unless node
-      match = @method_table.find { |method, objects| Regexp.new(Regexp.escape(query), Regexp::IGNORECASE) =~ method }
-      node  = match[1].first if node  
-    end
-    node
-  end
-  
 end
 
