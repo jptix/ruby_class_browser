@@ -57,8 +57,7 @@ class RCBAppController < NSObject
       return browser_selection_changed
     end
     
-    if query.to_ruby =~ /[A-Z]/
-      # class search
+    # if query.to_ruby =~ /[A-Z]/
       if node = class_search(query)
        path_for_node(node).each_with_index do |e, idx|
          if idx == 0
@@ -69,12 +68,12 @@ class RCBAppController < NSObject
        end
        browser_selection_changed
       end
-    else
-      # method search
-      log("method search:")
-      node = method_search(query)
-      log("result #{node.inspect}")
-    end
+    # else
+    #   # method search
+    #   log("method search:")
+    #   node = method_search(query)
+    #   log("result #{node.inspect}")
+    # end
 	end
 	
 	def focus_search_field

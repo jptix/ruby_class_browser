@@ -15,18 +15,17 @@ class RCBTreeConstructor
       name = obj.name.empty? ? obj.to_s : obj.name
       node = (@classes[obj.name] ||= RCBClassNode.new(obj))
       
-      obj.instance_methods(false).each do |meth|
-        arr = @methods[meth] 
-        arr << node unless arr.include?(node)
-      end
-      
-      obj.methods(false).each do |meth|
-        arr = @methods[meth] 
-        arr << node unless arr.include?(node)
-      end
+    #   obj.instance_methods(false).each do |meth|
+    #     arr = @methods[meth] 
+    #     arr << node unless arr.include?(node)
+    #   end
+    #   
+    #   obj.methods(false).each do |meth|
+    #     arr = @methods[meth] 
+    #     arr << node unless arr.include?(node)
+    #   end
     end
     
-    log("ObjectSpace traversal finished.")
     @classes.delete(nil)
     @classes.values.each do |node|
       if parent_node = @classes[node.superclass.to_s]
