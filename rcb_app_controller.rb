@@ -2,11 +2,7 @@ require 'osx/cocoa'
 include OSX
 
 require_framework 'WebKit'
-
-# require "rcb_tree_constructor"
-# require "rcb_browser_cell"
 require "ri_outputter/lib/ri_outputter"
-# require "rcb_search_window_controller"
 
 class RCBAppController < NSObject
 	ib_outlets :browser, :table_view, :doc_view, :search_field,
@@ -165,8 +161,11 @@ class RCBAppController < NSObject
   def show_documentation(query)
     begin 
       html = @ri.html_for(query)
-    rescue RiError
-      html = nil
+    rescue => e
+      html = <<-HTML
+      <h3>Ri Exception: #{e.message}</h3>
+      <pre style="font-family: monospace; font-size:0.8em">#{e.backtrace.join("\n")}</pre>
+      HTML
     end
     @doc_view.mainFrame.loadHTMLString_baseURL(html || "<h3>Nothing found for #{e_html query.inspect}</h3>", nil)   
   end
@@ -207,7 +206,7 @@ class RCBAppController < NSObject
     node = @method_table[query.to_s].first
     unless node
       match = @method_table.find { |method, objects| Regexp.new(Regexp.escape(query), Regexp::IGNORECASE) =~ method }
-      node  = match[1].first if node  
+      node  = match[1].first if match 
     end
     node
   end
