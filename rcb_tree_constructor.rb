@@ -26,7 +26,6 @@ class RCBTreeConstructor
       end
     end
     
-    log("ObjectSpace traversal finished.")
     @classes.delete(nil)
     @classes.values.each do |node|
       if parent_node = @classes[node.superclass.to_s]

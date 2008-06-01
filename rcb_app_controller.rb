@@ -153,7 +153,7 @@ class RCBAppController < NSObject
   def show_documentation(query)
     begin 
       html = @ri.html_for(query)
-    rescue RiError
+    rescue
       html = nil
     end
     @doc_view.mainFrame.loadHTMLString_baseURL(html || "<h3>Nothing found for #{e_html query.inspect}</h3>", nil)   
