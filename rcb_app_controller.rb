@@ -5,8 +5,8 @@ require_framework 'WebKit'
 require "ri_outputter/lib/ri_outputter"
 
 class RCBAppController < NSObject
-	ib_outlets :browser, :table_view, :doc_view, :search_field,
-	           :window, :toggle_button, :search_result_table
+	ib_outlets :browser, :table_view, :doc_view, :search_panel, :search_field,
+	           :window, :toggle_button, :searcher
 
   def initialize
     Thread.abort_on_exception = true
@@ -30,14 +30,10 @@ class RCBAppController < NSObject
     @classes      = @tree_constructor.classes
     @method_table = @tree_constructor.methods
 
-    # @searcher = RCBSearcher.new(@classes, @method_table, @search_result_table)
-    # @search_result_table.delegate = @search_result_table.dataSource = @searcher
-    # @rcb_searcher.class_table = @classes
-    # @rcb_searcher.method_table = @method_table
-    
-    
     @browser.selectRow_inColumn(0, 0) 
     browser_selection_changed
+    
+    log @classes.find { |k,v| k == "CGI::Cookie"}
 	end
 	
   def open(sender)
@@ -52,16 +48,24 @@ class RCBAppController < NSObject
     end
     @classes = @tree_constructor.create
   end
+  
+  def open_search_window(sender)
+    @search_panel.makeKeyAndOrderFront(self)
+    @search_field.becomeFirstResponder
+  end
 
 	def search(sender)
+	  @searcher.class_table = @classes
+	  @searcher.method_table = @method_table
 	  query = sender.stringValue
 	  if query.empty?
+	    @searcher.reset
       @browser.selectRow_inColumn(0, 0) 
       return browser_selection_changed
     end
     
     if query.to_ruby =~ /[A-Z]/
-      if nodes = @searcher.find_classes(query)
+      unless(nodes = @searcher.find_classes(query)).empty?
         select_node(nodes.first)
       end
     else
@@ -89,6 +93,34 @@ class RCBAppController < NSObject
 	  tableViewSelectionDidChange(nil)
 	end
 
+  def select_node(node)
+    log("selecting node: #{node.inspect}")
+    path_for_node(node).each_with_index do |e, idx|
+     if idx == 0
+       @browser.selectRow_inColumn(0, 0)
+     else
+       @browser.selectRow_inColumn(@classes[e.superclass.name].subclasses.index(e), idx)
+     end
+    end
+    browser_selection_changed
+  end
+  
+  def select_method(method_name, node)
+    select_node(node)
+    log(method_name)
+    if method_name[/(\w+)(#|::)(\w+)$/]
+      klass = $1
+      $2 == '#' ? select_instance_side : select_class_side
+      method = $3
+      if idx = @methods.index(method)
+        @table_view.selectRow_byExtendingSelection(idx, false)
+        @table_view.scrollRowToVisible(idx)
+      end
+    end
+    
+  end
+
+
 	# ==============================
 	# = NSBrowser delegate methods =
 	# ==============================
@@ -113,9 +145,9 @@ class RCBAppController < NSObject
     end
 	end
 	
-	# ===================================
-	# = NSTableView data source methods =
-	# ===================================
+	# ==================================================
+	# = NSTableView (method table) data source methods =
+	# ==================================================
   def tableView_objectValueForTableColumn_row(table_view, column, row)
     @methods[row]
   end
@@ -124,13 +156,13 @@ class RCBAppController < NSObject
     @methods.size
   end
   
-  # ================================
-  # = NSTableView delegate methods =
-  # ================================
+  # ===============================================
+  # = NSTableView (method table) delegate methods =
+  # ===============================================
   def tableViewSelectionDidChange(notification)
-    row = @table_view.selectedRow
-    separator = @method_side == :instance ? '#' : '::'
-    show_documentation(@selected_class + separator + @methods[row].to_s)
+      row = @table_view.selectedRow
+      separator = @method_side == :instance ? '#' : '::'
+      show_documentation(@selected_class + separator + @methods[row].to_s)
   end
 
 	private
@@ -144,7 +176,7 @@ class RCBAppController < NSObject
   def path_for_node(node)
     path = [node]
     until (parent = node.superclass).nil?
-      node = @classes[parent.name]
+      break unless node = @classes[parent.name]
       path.unshift(node)
     end
     path
@@ -173,17 +205,6 @@ class RCBAppController < NSObject
     end
   end
 
-  def select_node(node)
-     path_for_node(node).each_with_index do |e, idx|
-       if idx == 0
-         @browser.selectRow_inColumn(0, 0)
-       else
-         @browser.selectRow_inColumn(@classes[e.superclass.name].subclasses.index(e), idx)
-       end
-     end
-     browser_selection_changed
-  end
-  
   def select_first_method
     @table_view.selectRowIndexes_byExtendingSelection(NSIndexSet.indexSetWithIndex(0), false)
     separator = @method_side == :instance ? '#' : '::'

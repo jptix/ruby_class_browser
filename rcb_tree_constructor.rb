@@ -1,11 +1,23 @@
 require "rcb_class_node"
 
+class RCBMethod
+  attr_reader :class_implementors, :instance_implementors
+  def initialize
+    @class_implementors = []
+    @instance_implementors = []
+  end
+  
+  def empty?
+    @class_implementors.empty? && @instance_implementors.empty?
+  end
+end
+
 class RCBTreeConstructor
   attr_reader :classes, :methods
   
   def initialize
     @classes = {}
-    @methods = Hash.new { |h, k| h[k] = [] }
+    @methods = Hash.new { |h, k| h[k] = RCBMethod.new }
     # require_stdlib
   end
   
@@ -16,12 +28,12 @@ class RCBTreeConstructor
       node = (@classes[obj.name] ||= RCBClassNode.new(obj))
       
       obj.instance_methods(false).each do |meth|
-        arr = @methods[meth] 
+        arr = @methods[meth].instance_implementors 
         arr << node unless arr.include?(node)
       end
       
       obj.methods(false).each do |meth|
-        arr = @methods[meth] 
+        arr = @methods[meth].class_implementors 
         arr << node unless arr.include?(node)
       end
     end
