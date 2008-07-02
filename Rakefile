@@ -6,12 +6,16 @@ require 'rake/testtask'
 require 'erb'
 require 'pathname'
 
+def e_sh(str)
+	str.to_s.gsub(/(?=[^a-zA-Z0-9_.\/\-\x7F-\xFF\n])/, '\\').gsub(/\n/, "'\n'").sub(/^$/, "''")
+end
+
 # Application own Settings
 APPNAME   = "Ruby Class Browser"
 TARGET    = "#{APPNAME}.app"
-VERSION   = "rev#{`svn info`[/Revision: (\d+)/, 1]}"
+VERSION   = "#{`git log -1`[/commit ([A-z0-9]{10})/, 1]}"
 RESOURCES = ["*.rb", "*.lproj", "Credits.*", "*.icns", "*.erb", "ri_outputter"]
-PKGINC    = [TARGET, 'README', 'html', 'client']
+PKGINC    = [e_sh(TARGET), 'README', 'html', 'client']
 LOCALENIB = [] #['Japanese.lproj/Main.nib']
 PUBLISH   = 'yourname@yourhost:path'
 
@@ -22,6 +26,10 @@ CLEAN.include ['**/.*.sw?', '*.dmg', TARGET, 'image', 'a.out']
 # Tasks
 task :default => [:test]
 
+task :version do
+  puts VERSION
+end
+
 desc 'Create Application Budle and Run it.'
 task :test => [TARGET] do
 	sh %{open '#{TARGET}'}
@@ -29,7 +37,7 @@ end
 
 desc 'Create .dmg file for Publish'
 task :package => [:clean, 'pkg', TARGET] do
-	name = "#{APPNAME}.#{VERSION}"
+	name = e_sh "#{APPNAME}.#{VERSION}"
 	sh %{
 	mkdir image
 	cp -r #{PKGINC.join(' ')} image
@@ -46,7 +54,7 @@ end
 desc 'Publish .dmg file to specific server.'
 task :publish => [:package] do
 	sh %{
-	svn log > CHANGES
+	git log > CHANGES
 	}
 	_, host, path = */^([^\s]+):(.+)$/.match(PUBLISH)
 	path = Pathname.new path
